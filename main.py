@@ -18,12 +18,18 @@ import json
 import os
 import sys
 from dataclasses import dataclass, asdict
+import requests
 
 if len(sys.argv) == 1:
     print("Waiting for response...")
-    os.system("wget -q --show-progress https://scibowldb.com/api/questions")
+    res = requests.get("https://scibowldb.com/api/questions")
+    if res.status_code == 200:
+        f = open("questions.json", "w")
+        f.write(res.text)
+        f.close()
+    else:
+        print("There was an error in fetching. The response code was", res.status_code)
     print("Done.")
-    os.system("mv questions questions.json")
 
 print("Reading...")
 if len(sys.argv) != 1:
@@ -128,6 +134,37 @@ class tossup:
     packet: Packet
     set: Set
 
+@dataclass
+class multiple_choice:
+    question: str
+    w: str
+    x: str
+    y: str
+    z: str
+    correct: str
+
+@dataclass
+class short_answer:
+    question: str
+    answer: str
+    acceptable_alternatives: list[str]
+
+@dataclass 
+class question:
+    category: str
+    source: str
+    id: int
+    tossup_multiple_choice: bool
+    tossup: multiple_choice | short_answer
+    bonus_multiple_choice: bool
+    bonus: multiple_choice | short_answer
+
+@dataclass
+class set:
+    name: str
+    problems: list[question]
+
+
 physics_tossups: list[dict] = []
 
 i: dict
@@ -177,7 +214,7 @@ for i in data:
                 continue
             formattedAnswer = "<b><u>" + l[0] + "</u></b>" + " (Accept " + "<b><u>" + l[1].title() + "</u></b>)"
             continue
-        formattedAnswer = "<b><u>" + l[0] + "</u></b>" + " (Accept " + "<b><u>" + l[1].title() + "</u></b>)"
+        formattedAnswer = "<b><u>" + l[0] + "</u></b>\ (Accept <b><u>" + l[1].title() + "</u></b>)"
     else:
         formattedAnswer = "<b><u>" + i["tossup_answer"] + "</u></b>"
     physics_tossups.append(asdict(tossup(
