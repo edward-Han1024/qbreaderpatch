@@ -1,3 +1,19 @@
+# Main script to download and process science bowl questions for qbreader
+# Copyright (C) 2025-2026 Edward Han
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import json
 import os
 import sys
@@ -8,8 +24,12 @@ if len(sys.argv) == 1:
     os.system("wget -q --show-progress https://scibowldb.com/api/questions")
     print("Done.")
     os.system("mv questions questions.json")
+
 print("Reading...")
-f = open("questions.json", "r")
+if len(sys.argv) != 1:
+    f = open(sys.argv[1], "r")
+else:
+    f = open("questions.json", "r")
 jsondata = f.read()
 f.close()
 data = json.loads(jsondata)["questions"]
@@ -103,14 +123,39 @@ class tossup:
     answer: str
     answer_sanitized: str
     category: str
-    subcategory: str
+    subcategory: str | None
+    alternate_subcategory: str | None
     packet: Packet
     set: Set
 
 physics_tossups: list[dict] = []
 
 i: dict
-for i in physics:
+category: dict = {
+    "ENERGY": None,
+    "EARTH AND SPACE": "Other Science",
+    "EARTH SCIENCE": "Other Science",
+    "CHEMISTRY": "Chemistry",
+    "BIOLOGY": "Biology",
+    "ASTRONOMY": "Other Science",
+    "MATH": "Other Science",
+    "COMPUTER SCIENCE": "Other Science",
+    "PHYSICS": "Physics",
+    "GENERAL SCIENCE": None
+}
+alternatecategory: dict = {
+    "ENERGY": None,
+    "EARTH AND SPACE": "Astronomy",
+    "EARTH SCIENCE": "Earth Science",
+    "CHEMISTRY": None,
+    "BIOLOGY": None,
+    "ASTRONOMY": "Astronomy",
+    "MATH": "Math",
+    "COMPUTER SCIENCE": "Computer Science",
+    "PHYSICS": None,
+    "GENERAL SCIENCE": None
+}
+for i in data:
     question = ""
     if i["source"][:12] != "Official-set":
         continue
@@ -120,7 +165,7 @@ for i in physics:
             question += j + "<br />"
     else:
         question = i["tossup_question"]
-    prefix = "Tossup " + "Physics " + i["tossup_format"]
+    prefix = "Tossup " + i["category"]+ " " + i["tossup_format"]
     formattedAnswer = ""
     if i["tossup_format"] == "Multiple Choice":
         l: list[str] = i["tossup_answer"].split(")")
@@ -141,7 +186,8 @@ for i in physics:
         formattedAnswer,
         i["tossup_answer"],
         "Science",
-        "Physics",
+        category[i["category"]],
+        alternatecategory[i["category"]],
         Packet(i["source"], int(i["source"].split("round")[1])),
         Set("2000" + i["source"], 2000, False)
     )))
