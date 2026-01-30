@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Scam sbreader</title>
+    <script>
+        sys = {};
+        sys.buzzed = false;
+        sys.started = false;
+        window.sb = {
+            buzz: () => {
+                sys.buzzed = true;
+            },
+            start: () => {
+                sys.started = true;
+            }
+        }
+        async function run() {
+            var response = await fetch("http://localhost:5500/qbreader.json");
+            if (!response.ok){
+                document.getElementById("question").innerHTML = "There was an error attempting to fetch the questions";
+            } else {
+                document.getElementById("question").innerHTML = await response.json() + " ";
+            }
+        }
+    </script>
+    <style>
+        div#question {
+            font-family: sans-serif;
+            border: solid, black, 1px;
+        }
+
+        button#buzz {
+            border: solid, black, 1px;
+            background-color: white;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="question"></div>
+    <button id="buzz" onclick="window.buzz()">buzz in</button>
+    <button id="start" onclick="window.buzz()">start</button>
+</body>
+
+</html>
