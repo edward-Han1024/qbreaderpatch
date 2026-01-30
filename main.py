@@ -214,7 +214,7 @@ for i in data:
                 continue
             formattedAnswer = "<b><u>" + l[0] + "</u></b>" + " (Accept " + "<b><u>" + l[1].title() + "</u></b>)"
             continue
-        formattedAnswer = "<b><u>" + l[0] + "</u></b>\ (Accept <b><u>" + l[1].title() + "</u></b>)"
+        formattedAnswer = "<b><u>" + l[0] + "</u></b> (Accept <b><u>" + l[1].title() + "</u></b>)"
     else:
         formattedAnswer = "<b><u>" + i["tossup_answer"] + "</u></b>"
     physics_tossups.append(asdict(tossup(
