@@ -160,7 +160,7 @@ class question:
     bonus: multiple_choice | short_answer
 
 @dataclass
-class set:
+class packet:
     name: str
     problems: list[question]
 
@@ -193,15 +193,15 @@ alternatecategory: dict = {
     "GENERAL SCIENCE": None
 }
 for i in data:
-    question = ""
+    text = ""
     if i["source"][:12] != "Official-set":
         continue
     if i["tossup_format"] == "Multiple Choice":
         l: list[str] = i["tossup_question"].split("\n")
         for j in l:
-            question += j + "<br />"
+            text += j + "<br />"
     else:
-        question = i["tossup_question"]
+        text = i["tossup_question"]
     prefix = "Tossup " + i["category"]+ " " + i["tossup_format"]
     formattedAnswer = ""
     if i["tossup_format"] == "Multiple Choice":
@@ -212,14 +212,14 @@ for i in data:
             if len(l) == 1:
                 print("Error: Could not resolve issue")
                 continue
-            formattedAnswer = "<b><u>" + l[0] + "</u></b>" + " (Accept " + "<b><u>" + l[1].title() + "</u></b>)"
+            formattedAnswer = "<b><u>" + l[0] + "</u></b>" + " (Accept <b><u>" + l[1].title() + "</u></b>)"
             continue
         formattedAnswer = "<b><u>" + l[0] + "</u></b> (Accept <b><u>" + l[1].title() + "</u></b>)"
     else:
         formattedAnswer = "<b><u>" + i["tossup_answer"] + "</u></b>"
     physics_tossups.append(asdict(tossup(
-        "<b>" + prefix + " " + question + " (*) </b>",
-        prefix + " " + question.replace("<br />", " \n"),
+        "<b>" + prefix + " " + text + " (*) </b>",
+        prefix + " " + text.replace("<br />", " \n"),
         formattedAnswer,
         i["tossup_answer"],
         "Science",
@@ -229,6 +229,45 @@ for i in data:
         Set("2000" + i["source"], 2000, False)
     )))
 
+qs: list[question] = []
+for i in data:
+    if i["source"][0:12] != "Official-set":
+        continue
+    q: multiple_choice | short_answer = short_answer("blank", "blank", [])
+    text = ""
+    w = ""
+    x = ""
+    y = ""
+    z = ""
+    if i["tossup_format"] == "Multiple Choice":
+        l: list[str] = i["tossup_question"].split("\n")
+        text = "Tossup " + i["category"].title() + " Multiple Choice " + l[0]
+        try:
+            w=l[1]
+            x=l[2]
+            y=l[3]
+            z=l[4]
+        except:
+            print("Not enough line breaks? Question is", i["id"], "Text is", i["tossup_question"])
+            continue
+        answer = i["tossup_answer"].split(")")
+        if len(answer) == 1:
+            answer = i["tossup_answer"].split("--")
+            if len(answer) == 1:
+                if i["tossup_answer"] in ["W", "X", "Y", "Z"]:
+                    answer = i["tossup_answer"]
+                else:
+                    print("Error: Multiple choice question without `)'. Question is", i["id"], "Answer is", i["tossup_answer"])
+                    continue
+        q = multiple_choice(text, w, x, y, z, answer[0])
+    else:
+        text = "Tossup " + i["category"].title() + " Short Answer " + i["tossup_question"]
+        q = short_answer(text, i["tossup_answer"], [])
+    qs.append(question(i["category"], i["source"], i["id"], i["tossup_format"] == "Multiple Choice", q, False, short_answer("", "", [])))
 f = open("qbreader.json", "w")
 f.write(json.dumps({"tossups":physics_tossups,"bonuses":[]}, indent=4))
+f.close()
+
+f = open("server.json", "w")
+f.write(json.dumps(asdict(packet("official", qs))))
 f.close()

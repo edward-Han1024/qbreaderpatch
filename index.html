@@ -4,7 +4,16 @@
 <head>
     <title>Scam sbreader</title>
     <script>
-        sys = {};
+        'use strict';
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        function choice(arr) {
+            const randomIndex = Math.floor(Math.random() * arr.length);
+            const randomValue = arr[randomIndex];
+            return randomValue;
+        }
+        let sys = {};
         sys.buzzed = false;
         sys.started = false;
         window.sb = {
@@ -16,13 +25,50 @@
             }
         }
         async function run() {
-            var response = await fetch("http://localhost:5500/qbreader.json");
-            if (!response.ok){
+            var response = await fetch("https://edward-Han1024.github.io/qbreaderpatch/server.json");
+            if (!response.ok) {
                 document.getElementById("question").innerHTML = "There was an error attempting to fetch the questions";
+                return;
             } else {
-                document.getElementById("question").innerHTML = await response.json() + " ";
+                sys.questions = await response.json();
+            }
+            while (true) {
+                document.getElementById("question").innerHTML = ""
+                sys.current = choice(sys.questions.problems)
+                for (let i = 0; i < sys.current.tossup.question.length; i++) {
+                    document.getElementById("question").innerHTML += sys.current.tossup.question.charAt(i);
+                    await delay(50);
+                }
+                if (sys.current.tossup_multiple_choice) {
+                    document.getElementById("question").innerHTML += "<br />";
+                    for (let i = 0; i < sys.current.tossup.w.length; i++) {
+                        document.getElementById("question").innerHTML += sys.current.tossup.w.charAt(i);
+                        await delay(50);
+                    }
+                    document.getElementById("question").innerHTML += "<br />";
+                    for (let i = 0; i < sys.current.tossup.x.length; i++) {
+
+                        document.getElementById("question").innerHTML += sys.current.tossup.x.charAt(i);
+                        await delay(50);
+                    }
+                    document.getElementById("question").innerHTML += "<br />";
+                    for (let i = 0; i < sys.current.tossup.y.length; i++) {
+
+                        document.getElementById("question").innerHTML += sys.current.tossup.y.charAt(i);
+                        await delay(50);
+                    }
+                    document.getElementById("question").innerHTML += "<br />";
+                    for (let i = 0; i < sys.current.tossup.z.length; i++) {
+
+                        document.getElementById("question").innerHTML += sys.current.tossup.z.charAt(i);
+                        await delay(50);
+                    }
+
+                }
+                await delay(1000);
             }
         }
+        window.sb.run = run;
     </script>
     <style>
         div#question {
@@ -40,8 +86,8 @@
 
 <body>
     <div id="question"></div>
-    <button id="buzz" onclick="window.buzz()">buzz in</button>
-    <button id="start" onclick="window.buzz()">start</button>
+    <button id="buzz" onclick="window.sb.buzz()">buzz in</button>
+    <button id="start" onclick="window.sb.run()">start</button>
 </body>
 
 </html>
