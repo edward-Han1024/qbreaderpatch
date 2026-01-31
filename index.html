@@ -33,21 +33,43 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         let sys = {};
         sys.buzzed = false;
         sys.started = false;
+        sys.answered = false;
+        sys.buzzable = false;
+        sys.points = 0;
         window.sb = {
-            points: 0,
             buzz: () => {
-                sys.buzzed = true;
-                document.getElementById("question").innerHTML += " <span class=\"buzzmark\">(#)</span> "
-                let answer = prompt("Answer:");
-                if (answer.toLowerCase() == sys.current.tossup.answer.toLowerCase()) {
-                    window.sb.points += 4;
+                if (sys.buzzable) {
+                    sys.buzzed = true;
+                    document.getElementById("question").innerHTML += " <span class=\"buzzmark\">(#)</span> "
+                    let answer = prompt("Answer:");
+                    if (answer.toLowerCase() == sys.current.tossup.answer.toLowerCase()) {
+                        sys.points += 4;
+                        document.getElementById("score").innerHTML = sys.points;
+                    }
                     sys.buzzed = false;
-                } else {
-                    sys.buzzed = false;
+                    sys.answered = true;
                 }
             },
             start: () => {
                 sys.started = true;
+            },
+            naman: async (answer) => {
+                let res = await fetch(
+                    atob("aHR0cHM6Ly9zYnJlYWRlci1zZXJ2aWNlLTMxMjY4MjUwMDg3LnVzLXdlc3QxLnJ1bi5hcHAvYXBpL2FpLWhlbHAvZXF1aXZhbGVuY2U="), // my secret url.
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            question: sys.current.tossup.question,
+                            correctAnswer: sys.current.tossup.answer,
+                            userAnswer: "YOUR ANSWER:" + answer,
+                            category: sys.current.category
+                        }),
+                    });
+                let data = await res.json();
+                console.log(data);
             }
         }
         async function buzzwait() {
@@ -70,6 +92,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             } else {
                 sys.questions = await response.json();
             }
+            sys.buzzable = true;
             while (true) {
                 document.getElementById("question").innerHTML = ""
                 sys.current = choice(sys.questions.problems)
@@ -77,6 +100,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     document.getElementById("question").innerHTML += sys.current.tossup.question.charAt(i);
                     await delay(50);
                     await buzzwait();
+                    if (sys.answered) {
+                        break;
+                    }
                 }
                 if (sys.current.tossup_multiple_choice) {
                     document.getElementById("question").innerHTML += "<br />";
@@ -84,29 +110,52 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                         document.getElementById("question").innerHTML += sys.current.tossup.w.charAt(i);
                         await delay(50);
                         await buzzwait();
+                        if (sys.answered) {
+                            break;
+                        }
                     }
                     document.getElementById("question").innerHTML += "<br />";
                     for (let i = 0; i < sys.current.tossup.x.length; i++) {
                         document.getElementById("question").innerHTML += sys.current.tossup.x.charAt(i);
                         await delay(50);
                         await buzzwait();
+                        if (sys.answered) {
+                            break;
+                        }
                     }
                     document.getElementById("question").innerHTML += "<br />";
                     for (let i = 0; i < sys.current.tossup.y.length; i++) {
                         document.getElementById("question").innerHTML += sys.current.tossup.y.charAt(i);
                         await delay(50);
                         await buzzwait();
+                        if (sys.answered) {
+                            break;
+                        }
                     }
                     document.getElementById("question").innerHTML += "<br />";
                     for (let i = 0; i < sys.current.tossup.z.length; i++) {
                         document.getElementById("question").innerHTML += sys.current.tossup.z.charAt(i);
                         await delay(50);
                         await buzzwait();
+                        if (sys.answered) {
+                            break;
+                        }
                     }
-
                 }
                 await buzzwait();
-                await delay(4000);
+                if (!sys.answered) {
+                    await delay(4000);
+                }
+                sys.buzzable = false;
+                document.getElementById("buzz").disabled = true;
+                document.getElementById("question").innerHTML = sys.current.tossup.question + "<br />"
+                    + (sys.current.tossup_multiple_choice ? (sys.current.tossup.w + "<br />" + sys.current.tossup.x + "<br />" + sys.current.tossup.y + "<br />" + sys.current.tossup.z + "<br />") : "")
+                    + "<br /> <br />Answer: " + sys.current.tossup.answer;
+                sys.answered = false;
+                await buzzwait();
+                await delay(10000);
+                sys.buzzable = true;
+                document.getElementById("buzz").disabled = false;
             }
         }
         window.sb.run = run;
@@ -115,7 +164,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         * {
             font-size: 12pt;
         }
-        
+
         div {
             padding: 10px;
         }
@@ -147,33 +196,73 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         div#controls {
             margin-top: auto;
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
+            padding-left: 0px;
+            padding-right: 0px;
         }
 
         button#start {
             background-color: green;
             color: white;
+            margin-right: 0px;
         }
 
         button#buzz {
             background-color: crimson;
             color: white;
             flex-grow: 1;
+            margin-left: 0px;
+        }
+
+        button#iwasright {
+            background-color: greenyellow;
+            margin-left: 0px;
+            flex-grow: 1;
+        }
+
+        button#naman {
+            background-color: darkslategrey;
+            color: white;
+            flex-grow: 1;
+            margin-right: 0px;
         }
 
         span.buzzmark {
             color: lightgrey;
             font-size: 10pt;
         }
+
+        div#scorediv {
+            border: 1px, solid, grey;
+            margin-bottom: 10px;
+        }
+
+        div.controlsrow {
+            display: flex;
+            flex-direction: row;
+            margin: 0px;
+            padding: 0px;
+        }
+
+        button#buzz:disabled{
+            background-color: rgba(255, 0, 0, 0.514);
+        }
     </style>
 </head>
 
 <body>
     <div id="all">
+        <div id="scorediv">Score: <span id="score">0</span></div>
         <div id="question"></div>
         <div id="controls">
-            <button id="buzz" onclick="window.sb.buzz()">buzz in</button>
-            <button id="start" onclick="window.sb.run()">start</button>
+            <div class="controlsrow">
+                <button id="buzz" onclick="window.sb.buzz()">buzz in</button>
+                <button id="start" onclick="window.sb.run()">start</button>
+            </div>
+            <div class="controlsrow" hidden>
+                <button id="iwasright" onclick="window.sb.buzz()" hidden>I was right.</button>
+                <button id="naman" onclick="window.sb.run()" hidden>What does Naman Think?</button>
+            </div>
         </div>
     </div>
 </body>
