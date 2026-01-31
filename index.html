@@ -1,3 +1,20 @@
+<!--
+static server file to show the questions & stuff
+Copyright (C) 2025-2026 Edward Han
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
 <!DOCTYPE html>
 <html>
 
@@ -17,12 +34,32 @@
         sys.buzzed = false;
         sys.started = false;
         window.sb = {
+            points: 0,
             buzz: () => {
                 sys.buzzed = true;
+                let answer = prompt("Answer:");
+                if (answer.toLowerCase() == sys.current.tossup.answer.toLowerCase()) {
+                    window.sb.points += 4;
+                    sys.buzzed = false;
+                } else {
+                    sys.buzzed = false;
+                }
             },
             start: () => {
                 sys.started = true;
             }
+        }
+        async function buzzwait() {
+            return new Promise((resolve) => {
+                function check() {
+                    if (sys.buzzed) {
+                        window.setTimeout(check, 100);
+                    } else {
+                        resolve();
+                    }
+                }
+                check();
+            })
         }
         async function run() {
             var response = await fetch("https://edward-Han1024.github.io/qbreaderpatch/server.json");
@@ -38,34 +75,37 @@
                 for (let i = 0; i < sys.current.tossup.question.length; i++) {
                     document.getElementById("question").innerHTML += sys.current.tossup.question.charAt(i);
                     await delay(50);
+                    await buzzwait();
                 }
                 if (sys.current.tossup_multiple_choice) {
                     document.getElementById("question").innerHTML += "<br />";
                     for (let i = 0; i < sys.current.tossup.w.length; i++) {
                         document.getElementById("question").innerHTML += sys.current.tossup.w.charAt(i);
                         await delay(50);
+                        await buzzwait();
                     }
                     document.getElementById("question").innerHTML += "<br />";
                     for (let i = 0; i < sys.current.tossup.x.length; i++) {
-
                         document.getElementById("question").innerHTML += sys.current.tossup.x.charAt(i);
                         await delay(50);
+                        await buzzwait();
                     }
                     document.getElementById("question").innerHTML += "<br />";
                     for (let i = 0; i < sys.current.tossup.y.length; i++) {
-
                         document.getElementById("question").innerHTML += sys.current.tossup.y.charAt(i);
                         await delay(50);
+                        await buzzwait();
                     }
                     document.getElementById("question").innerHTML += "<br />";
                     for (let i = 0; i < sys.current.tossup.z.length; i++) {
-
                         document.getElementById("question").innerHTML += sys.current.tossup.z.charAt(i);
                         await delay(50);
+                        await buzzwait();
                     }
 
                 }
-                await delay(1000);
+                await buzzwait();
+                await delay(4000);
             }
         }
         window.sb.run = run;
