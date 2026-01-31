@@ -37,6 +37,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             points: 0,
             buzz: () => {
                 sys.buzzed = true;
+                document.getElementById("question").innerHTML += " <span class=\"buzzmark\">(#)</span> "
                 let answer = prompt("Answer:");
                 if (answer.toLowerCase() == sys.current.tossup.answer.toLowerCase()) {
                     window.sb.points += 4;
@@ -111,23 +112,70 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         window.sb.run = run;
     </script>
     <style>
-        div#question {
-            font-family: sans-serif;
-            border: solid, black, 1px;
+        * {
+            font-size: 12pt;
+        }
+        
+        div {
+            padding: 10px;
         }
 
-        button#buzz {
+        div#question {
+            font-family: sans-serif;
+            border: solid, grey, 1px;
+        }
+
+        button {
             border: solid, black, 1px;
             background-color: white;
             font-family: sans-serif;
+            padding: 5px 10px 5px 10px;
+            margin: 5px;
+        }
+
+        div#all {
+            display: flex;
+            flex-direction: column;
+            min-height: 80vh;
+            max-height: 90vh;
+        }
+
+        div#question {
+            flex-grow: 1;
+        }
+
+        div#controls {
+            margin-top: auto;
+            display: flex;
+            flex-direction: row;
+        }
+
+        button#start {
+            background-color: green;
+            color: white;
+        }
+
+        button#buzz {
+            background-color: crimson;
+            color: white;
+            flex-grow: 1;
+        }
+
+        span.buzzmark {
+            color: lightgrey;
+            font-size: 10pt;
         }
     </style>
 </head>
 
 <body>
-    <div id="question"></div>
-    <button id="buzz" onclick="window.sb.buzz()">buzz in</button>
-    <button id="start" onclick="window.sb.run()">start</button>
+    <div id="all">
+        <div id="question"></div>
+        <div id="controls">
+            <button id="buzz" onclick="window.sb.buzz()">buzz in</button>
+            <button id="start" onclick="window.sb.run()">start</button>
+        </div>
+    </div>
 </body>
 
 </html>
